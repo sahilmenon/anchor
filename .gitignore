@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.env
+runs/
+out/
+corpus/pdfs/*.pdf
+!corpus/pdfs/.gitkeep
