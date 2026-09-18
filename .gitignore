@@ -14,3 +14,14 @@ runs/
 out/
 corpus/pdfs/*.pdf
 !corpus/pdfs/.gitkeep
+
+# AI tooling — never commit
+.claude/
+.cursor/
+.aider*
+CLAUDE.md
+AGENTS.md
+plan.md
+PLAN.md
+*.plan.md
+.github/copilot-instructions.md

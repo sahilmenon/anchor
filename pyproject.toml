@@ -38,3 +38,7 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+# UP042 wants StrEnum. LineItem stays `str, Enum` on purpose: it is the
+# pydantic-conventional form, and switching would change how members render
+# in f-strings, which the abstention reasons and report tables depend on.
+ignore = ["UP042"]

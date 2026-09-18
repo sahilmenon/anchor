@@ -52,16 +52,16 @@ class Document:
         return self.pages[page - 1]
 
     @classmethod
-    def from_pdf(cls, pdf_path: Path, doc_id: str | None = None) -> "Document":
+    def from_pdf(cls, pdf_path: Path, doc_id: str | None = None) -> Document:
         """Parse a PDF into page text using PyMuPDF."""
-        import fitz  # PyMuPDF
+        import pymupdf
 
-        doc = fitz.open(pdf_path)
+        doc = pymupdf.open(pdf_path)
         pages = [p.get_text() for p in doc]
         doc.close()
         return cls(doc_id or Path(pdf_path).stem, pages)
 
     @classmethod
-    def from_pages(cls, doc_id: str, pages: list[str]) -> "Document":
+    def from_pages(cls, doc_id: str, pages: list[str]) -> Document:
         """Build directly from text. Used by tests and fixtures."""
         return cls(doc_id, pages)

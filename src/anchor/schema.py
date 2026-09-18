@@ -14,9 +14,9 @@ correct by construction and every remaining error is a sourcing error.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
 
-from pydantic import BaseModel, Field as PField
+from pydantic import BaseModel
+from pydantic import Field as PField
 
 
 class LineItem(str, Enum):
@@ -50,20 +50,20 @@ class ExtractedField(BaseModel):
     """One extracted line item, with its evidence and the model's confidence."""
 
     name: LineItem
-    value: Optional[float] = PField(
+    value: float | None = PField(
         None, description="None means the extractor abstained on this field"
     )
     unit_scale: float = PField(
         1.0, description="Multiplier applied to reach base currency units"
     )
-    currency: Optional[str] = None
-    evidence: Optional[Evidence] = None
+    currency: str | None = None
+    evidence: Evidence | None = None
     confidence: float = PField(
         0.0, ge=0.0, le=1.0, description="Extractor self-reported confidence"
     )
 
     # Set by anchor.verify, not by the extractor.
-    grounded: Optional[bool] = PField(
+    grounded: bool | None = PField(
         None, description="True if quote was located on the cited page"
     )
 
@@ -72,7 +72,7 @@ class ExtractedField(BaseModel):
         return self.value is None
 
     @property
-    def scaled_value(self) -> Optional[float]:
+    def scaled_value(self) -> float | None:
         return None if self.value is None else self.value * self.unit_scale
 
 
@@ -82,14 +82,14 @@ class Extraction(BaseModel):
     doc_id: str
     fields: list[ExtractedField] = PField(default_factory=list)
     extractor: str = PField(..., description="Name of the extractor that ran")
-    model: Optional[str] = None
+    model: str | None = None
     latency_s: float = 0.0
     input_tokens: int = 0
     output_tokens: int = 0
     cost_usd: float = 0.0
     retries: int = 0
 
-    def get(self, name: LineItem) -> Optional[ExtractedField]:
+    def get(self, name: LineItem) -> ExtractedField | None:
         for f in self.fields:
             if f.name == name:
                 return f
@@ -100,10 +100,10 @@ class GoldenField(BaseModel):
     """A hand-labelled ground-truth value for one line item."""
 
     name: LineItem
-    value: Optional[float] = PField(
+    value: float | None = PField(
         None, description="None means the document does not state this item"
     )
-    page: Optional[int] = None
+    page: int | None = None
     ambiguous: bool = PField(
         False,
         description=(
@@ -124,7 +124,7 @@ class GoldenRecord(BaseModel):
     scanned: bool = False
     fields: list[GoldenField] = PField(default_factory=list)
 
-    def get(self, name: LineItem) -> Optional[GoldenField]:
+    def get(self, name: LineItem) -> GoldenField | None:
         for f in self.fields:
             if f.name == name:
                 return f
