@@ -248,3 +248,48 @@ class TestSweepCommand:
                     "--no-save",
                 ]
             )
+
+
+class TestOfflineExtractorWiring:
+    """The README advertises these commands, so they have to exist."""
+
+    def test_offline_is_registered(self) -> None:
+        from anchor.cli import EXTRACTORS
+
+        assert "offline" in EXTRACTORS
+
+    def test_offline_needs_a_transcript_directory(self, corpus_dir: Path) -> None:
+        with pytest.raises(SystemExit, match="--transcripts"):
+            run_cli(["run", "--corpus", str(corpus_dir), "--extractor", "offline",
+                     "--no-save"])
+
+    def test_a_missing_transcript_directory_is_refused(self, corpus_dir: Path,
+                                                       tmp_path: Path) -> None:
+        with pytest.raises(SystemExit, match="no such transcript directory"):
+            run_cli(["run", "--corpus", str(corpus_dir), "--extractor", "offline",
+                     "--transcripts", str(tmp_path / "nope"), "--no-save"])
+
+    def test_replaying_a_transcript_scores(self, corpus_dir: Path, tmp_path: Path,
+                                           capsys) -> None:
+        from anchor.extractors.offline import write_claims
+
+        names = ["revenue_ltm", "ebitda_reported", "ebitda_addbacks", "total_debt",
+                 "cash", "interest_expense", "principal_repayments", "cfads"]
+        row = "Total revenue                               24,180      21,405"
+        fields = [{"name": "revenue_ltm", "value": 24180, "unit_scale": 1000.0,
+                   "currency": None, "page": 1, "quote": row, "confidence": 0.9}]
+        fields += [{"name": n, "value": None, "unit_scale": 1.0, "currency": None,
+                    "page": None, "quote": None, "confidence": 0.0}
+                   for n in names if n != "revenue_ltm"]
+        write_claims(tmp_path, "doc-one", fields)
+
+        assert run_cli(["run", "--corpus", str(corpus_dir), "--extractor", "offline",
+                        "--transcripts", str(tmp_path), "--no-save"]) == EXIT_OK
+        assert "offline:" in capsys.readouterr().out
+
+    def test_a_replay_extractor_cannot_enter_the_frontier(self, corpus_dir: Path,
+                                                          capsys) -> None:
+        """The offline module's docstring promises this; it has to be true."""
+        from anchor.cli import REPLAY_EXTRACTORS
+
+        assert "offline" in REPLAY_EXTRACTORS

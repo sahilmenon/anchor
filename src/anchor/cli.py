@@ -34,6 +34,7 @@ from anchor.extractors.claude import (
     api_key_present,
 )
 from anchor.extractors.heuristic import HeuristicExtractor
+from anchor.extractors.offline import OfflineExtractor
 from anchor.gate import GateError, check_run, load_thresholds
 from anchor.render import render_corpus, render_gate, render_run, render_sweep
 from anchor.runner import DEFAULT_ALPHA, run_extractor, save_run, to_dict
@@ -50,10 +51,21 @@ EXIT_DATA_ERROR = 2
 EXTRACTORS: dict[str, type] = {
     "heuristic": HeuristicExtractor,
     "claude": ClaudeExtractor,
+    "offline": OfflineExtractor,
 }
 
+#: Extractors that replay recorded claims rather than producing them. A run of
+#: one carries no cost, no latency and no record of what produced it, so it can
+#: be scored but must never appear in a cost/accuracy frontier beside a model.
+REPLAY_EXTRACTORS: frozenset[str] = frozenset({"offline"})
 
-def _build_extractor(name: str, model: str | None = None, effort: str = "high") -> Extractor:
+
+def _build_extractor(
+    name: str,
+    model: str | None = None,
+    effort: str = "high",
+    transcripts: Path | None = None,
+) -> Extractor:
     """Instantiate an extractor by name.
 
     `--model` is meaningful only for extractors that take one, so passing it to
@@ -67,6 +79,17 @@ def _build_extractor(name: str, model: str | None = None, effort: str = "high") 
         raise SystemExit(
             f"unknown extractor {name!r}. Available: {', '.join(sorted(EXTRACTORS))}"
         ) from None
+
+    if cls is OfflineExtractor:
+        if transcripts is None:
+            raise SystemExit(
+                "the offline extractor replays recorded claims, so it needs "
+                "--transcripts <dir>"
+            )
+        root = Path(transcripts)
+        if not root.is_dir():
+            raise SystemExit(f"{root}: no such transcript directory")
+        return OfflineExtractor(root=root, label=root.name)
 
     if cls is ClaudeExtractor:
         # Checked here, before any document is read. Without it a missing
@@ -118,6 +141,12 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
         help="reasoning effort for a model-backed extractor (default: %(default)s)",
     )
     p.add_argument(
+        "--transcripts",
+        type=Path,
+        default=None,
+        help="directory of recorded claims, for --extractor offline",
+    )
+    p.add_argument(
         "--alpha",
         type=float,
         default=DEFAULT_ALPHA,
@@ -159,6 +188,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_extract.add_argument("document", type=Path, help="a .pdf, or a text/<id>.json page file")
     p_extract.add_argument("--extractor", default="heuristic")
+    p_extract.add_argument("--transcripts", type=Path, default=None)
     p_extract.add_argument(
         "--no-verify", action="store_true", help="skip quote verification"
     )
@@ -331,7 +361,11 @@ def cmd_extract(args: argparse.Namespace) -> int:
         if path.suffix.lower() == ".pdf"
         else load_text_document(path)
     )
-    extractor = _build_extractor(args.extractor, getattr(args, "model", None))
+    extractor = _build_extractor(
+        args.extractor,
+        getattr(args, "model", None),
+        transcripts=getattr(args, "transcripts", None),
+    )
     extraction = extractor.extract_document(doc, doc.doc_id)  # type: ignore[attr-defined]
     if not args.no_verify:
         extraction = verify_extraction(extraction, doc)
@@ -349,7 +383,7 @@ def _load_and_run(args: argparse.Namespace):
         )
     return run_extractor(
         corpus,
-        _build_extractor(args.extractor, args.model, args.effort),
+        _build_extractor(args.extractor, args.model, args.effort, args.transcripts),
         verify=not args.no_verify,
         alpha=args.alpha,
     )
@@ -462,7 +496,18 @@ def cmd_sweep(args: argparse.Namespace) -> int:
     configs: list[tuple[str, str | None]] = []
     if not args.no_baseline:
         configs.append(("heuristic", None))
+
     configs += [("claude", m.strip()) for m in args.models.split(",") if m.strip()]
+
+    # A replay extractor has no cost and no provenance, so a frontier row for it
+    # would set a measured model beside an unmeasured transcript. Score one with
+    # `anchor run` and report it as a sidebar.
+    replay = [name for name, _ in configs if name in REPLAY_EXTRACTORS]
+    if replay:
+        raise CorpusError(
+            f"{replay[0]!r} replays recorded claims and cannot appear in a "
+            "cost/accuracy frontier. Score it with `anchor run` instead."
+        )
 
     rows: list[dict] = []
     for name, model in configs:

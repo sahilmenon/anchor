@@ -199,7 +199,8 @@ why the adapter takes `--split`.
 
 With no API credit available, the six Kleister documents whose labels had not
 been seen were read by hand and the claims replayed through the scoring
-pipeline by `anchor run --extractor offline`. It answers one question: are these
+pipeline by `anchor run --extractor offline --transcripts <dir>`. It answers
+one question: are these
 figures findable at all, or is the 0.0% telling us the task is impossible?
 
 They are findable. Two of six scored correct against a regex that gets none of
