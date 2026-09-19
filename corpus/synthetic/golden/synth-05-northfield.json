@@ -1,0 +1,64 @@
+{
+  "doc_id": "synth-05-northfield",
+  "source": "Synthetic. Written for this repository; not a real filing.",
+  "pages": 3,
+  "scanned": false,
+  "fields": [
+    {
+      "name": "revenue_ltm",
+      "value": 41660000.0,
+      "page": 1,
+      "ambiguous": false,
+      "note": ""
+    },
+    {
+      "name": "ebitda_reported",
+      "value": 6204000.0,
+      "page": 1,
+      "ambiguous": false,
+      "note": ""
+    },
+    {
+      "name": "ebitda_addbacks",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated."
+    },
+    {
+      "name": "total_debt",
+      "value": 17380000.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": ""
+    },
+    {
+      "name": "cash",
+      "value": 2940000.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": ""
+    },
+    {
+      "name": "interest_expense",
+      "value": 1043000.0,
+      "page": 1,
+      "ambiguous": false,
+      "note": "Printed as (1,043); see synth-01 on the parentheses convention."
+    },
+    {
+      "name": "principal_repayments",
+      "value": 3010000.0,
+      "page": 3,
+      "ambiguous": false,
+      "note": "Repayment of borrowings 2,400 plus repayment of lease liabilities 610. Both are principal under a standard debt-service definition."
+    },
+    {
+      "name": "cfads",
+      "value": null,
+      "page": null,
+      "ambiguous": true,
+      "note": "Not disclosed. Operating cash flow of 5,880 is before capex and is not CFADS."
+    }
+  ]
+}

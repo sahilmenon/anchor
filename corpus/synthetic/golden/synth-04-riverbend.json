@@ -1,0 +1,64 @@
+{
+  "doc_id": "synth-04-riverbend",
+  "source": "Synthetic. Written for this repository; not a real filing.",
+  "pages": 2,
+  "scanned": true,
+  "fields": [
+    {
+      "name": "revenue_ltm",
+      "value": 12405000.0,
+      "page": 1,
+      "ambiguous": false,
+      "note": "Printed as l2,405 -- the OCR layer has read the leading 1 as a lower-case L. A human reads 12,405 from the column arithmetic."
+    },
+    {
+      "name": "ebitda_reported",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated."
+    },
+    {
+      "name": "ebitda_addbacks",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated."
+    },
+    {
+      "name": "total_debt",
+      "value": 3850000.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": ""
+    },
+    {
+      "name": "cash",
+      "value": 287000.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": "Printed as equlvalents -- OCR damage."
+    },
+    {
+      "name": "interest_expense",
+      "value": 391000.0,
+      "page": 1,
+      "ambiguous": false,
+      "note": "Printed as Fi nance costs (391) -- OCR has split the word."
+    },
+    {
+      "name": "principal_repayments",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated."
+    },
+    {
+      "name": "cfads",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated."
+    }
+  ]
+}

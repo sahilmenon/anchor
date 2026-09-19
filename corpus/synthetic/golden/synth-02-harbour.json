@@ -1,0 +1,64 @@
+{
+  "doc_id": "synth-02-harbour",
+  "source": "Synthetic. Written for this repository; not a real filing.",
+  "pages": 2,
+  "scanned": false,
+  "fields": [
+    {
+      "name": "revenue_ltm",
+      "value": 6836000.0,
+      "page": 1,
+      "ambiguous": true,
+      "note": "Total income 6,836 includes grant income of 2,905. Whether grant income counts as revenue for a credit assessment is a lender call: turnover alone is 3,418."
+    },
+    {
+      "name": "ebitda_reported",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated. The document says explicitly that it does not use the measure."
+    },
+    {
+      "name": "ebitda_addbacks",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated."
+    },
+    {
+      "name": "total_debt",
+      "value": 0.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": "The document states the Association has no borrowings and no finance facilities. Zero is a disclosure here, not an absence."
+    },
+    {
+      "name": "cash",
+      "value": 918000.0,
+      "page": 2,
+      "ambiguous": true,
+      "note": "Cash at bank 918. Term deposits of 1,200 may or may not be cash equivalents depending on their term, which the document does not give."
+    },
+    {
+      "name": "interest_expense",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated."
+    },
+    {
+      "name": "principal_repayments",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated."
+    },
+    {
+      "name": "cfads",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated."
+    }
+  ]
+}

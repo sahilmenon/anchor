@@ -1,0 +1,64 @@
+{
+  "doc_id": "synth-03-meridian",
+  "source": "Synthetic. Written for this repository; not a real filing.",
+  "pages": 3,
+  "scanned": false,
+  "fields": [
+    {
+      "name": "revenue_ltm",
+      "value": 104700000.0,
+      "page": 1,
+      "ambiguous": false,
+      "note": "FY24 column. FY22 and FY23 comparatives are printed to its left."
+    },
+    {
+      "name": "ebitda_reported",
+      "value": 14100000.0,
+      "page": 1,
+      "ambiguous": false,
+      "note": "FY24 reported EBITDA."
+    },
+    {
+      "name": "ebitda_addbacks",
+      "value": 2600000.0,
+      "page": 1,
+      "ambiguous": true,
+      "note": "Stated as normalisation adjustments of 2.6 in FY24. The memorandum does not itemise them, so a lender cannot test whether they are recurring."
+    },
+    {
+      "name": "total_debt",
+      "value": 60500000.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": ""
+    },
+    {
+      "name": "cash",
+      "value": 6300000.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": ""
+    },
+    {
+      "name": "interest_expense",
+      "value": 4800000.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": ""
+    },
+    {
+      "name": "principal_repayments",
+      "value": 2100000.0,
+      "page": 3,
+      "ambiguous": true,
+      "note": "The 2.1 figure is the FY25 scheduled amortisation -- forward-looking, not an LTM historical. Treating it as debt service is defensible for a DSCR the facility must carry, but it is not what the other line items measure."
+    },
+    {
+      "name": "cfads",
+      "value": 16200000.0,
+      "page": 3,
+      "ambiguous": false,
+      "note": ""
+    }
+  ]
+}

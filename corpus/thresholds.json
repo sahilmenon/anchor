@@ -1,0 +1,20 @@
+{
+  "corpus": "corpus",
+  "extractor": "heuristic",
+  "allow_undefined": false,
+  "_comment": [
+    "Floors for the real hand-labelled corpus. They are copied from the synthetic",
+    "corpus as a starting point and are NOT measured numbers -- corpus/golden is",
+    "still empty, so no run has produced them yet. Re-derive every bound from a",
+    "real baseline run before reading a pass here as evidence of anything, and",
+    "record the measurement in each note the way corpus/synthetic/thresholds.json",
+    "does. A floor with no provenance is a number nobody dares move."
+  ],
+  "metrics": {
+    "accuracy":                        {"min": 0.45, "note": "PROVISIONAL -- not yet measured on the real corpus"},
+    "grounding_rate":                  {"min": 0.88, "note": "PROVISIONAL -- not yet measured on the real corpus"},
+    "hallucination_rate":              {"max": 0.10, "note": "PROVISIONAL -- not yet measured on the real corpus"},
+    "abstention_precision":            {"min": 0.80, "note": "PROVISIONAL -- not yet measured on the real corpus"},
+    "ambiguous.abstention_precision":  {"min": 0.90, "note": "PROVISIONAL -- not yet measured on the real corpus"}
+  }
+}

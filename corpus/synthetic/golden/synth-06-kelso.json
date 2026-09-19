@@ -1,0 +1,64 @@
+{
+  "doc_id": "synth-06-kelso",
+  "source": "Synthetic. Written for this repository; not a real filing.",
+  "pages": 3,
+  "scanned": false,
+  "fields": [
+    {
+      "name": "revenue_ltm",
+      "value": 31905000.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": "Consolidated revenue. The segment extract on page 1 reports 8,220 for the retail division only."
+    },
+    {
+      "name": "ebitda_reported",
+      "value": 4882000.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": "The label wraps onto its own line; the figure sits on the line below."
+    },
+    {
+      "name": "ebitda_addbacks",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated."
+    },
+    {
+      "name": "total_debt",
+      "value": 6520000.0,
+      "page": 3,
+      "ambiguous": false,
+      "note": ""
+    },
+    {
+      "name": "cash",
+      "value": 1105000.0,
+      "page": 3,
+      "ambiguous": false,
+      "note": ""
+    },
+    {
+      "name": "interest_expense",
+      "value": 1288000.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": "Note reference 6 sits between the label and the figure."
+    },
+    {
+      "name": "principal_repayments",
+      "value": 0.0,
+      "page": 3,
+      "ambiguous": true,
+      "note": "The facility requires no scheduled principal amortisation during the term, so scheduled principal is zero. A lender modelling a refinancing at maturity would not treat debt service as interest-only."
+    },
+    {
+      "name": "cfads",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated."
+    }
+  ]
+}

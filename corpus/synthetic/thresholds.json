@@ -1,0 +1,17 @@
+{
+  "corpus": "corpus/synthetic",
+  "extractor": "heuristic",
+  "allow_undefined": false,
+  "metrics": {
+    "accuracy":                        {"min": 0.55, "note": "measured 0.594 over 6 synthetic documents, 32 answerable fields. Raised from 0.45 when the debt-service sign convention landed (MAGNITUDE_ITEMS), which turned 3 mismatches into correct answers."},
+    "coverage":                        {"min": 0.85, "note": "measured 0.906; a drop means the extractor started abstaining on stated figures"},
+    "grounding_rate":                  {"min": 0.88, "note": "measured 0.933; a drop means citations stopped checking out"},
+    "hallucination_rate":              {"max": 0.10, "note": "measured 0.062 -- the prose EBITDA mention in synth-02"},
+    "ungrounded_rate":                 {"max": 0.12, "note": "measured 0.067 -- the OCR-damaged revenue and the (FY25) misread"},
+    "abstention_precision":            {"min": 0.80, "note": "measured 0.889; the calibration signal, and the one accuracy cannot see"},
+    "ambiguous.abstention_precision":  {"min": 0.90, "note": "measured 1.000 on the 8 fields where labelling took a judgement call"},
+    "ratio.safety":                    {"min": 0.70, "note": "measured 0.708, down from 0.750. The sign fix let synth-05 compute a DSCR of 1.80 where it used to refuse, and truth is 1.53 -- the refusal had been masking a second fault, the principal split across a borrowings row and a lease row. Deliberately left tight: this floor is the tripwire for that open fault getting worse."},
+    "field.cash.accuracy":             {"min": 0.80, "note": "measured 1.000; cash is the easiest line item and a drop here is a parsing regression, not a hard document"},
+    "field.interest_expense.accuracy": {"min": 0.50, "note": "measured 0.600, up from 0.200. This floor is what stops the debt-service sign convention regressing unnoticed."}
+  }
+}

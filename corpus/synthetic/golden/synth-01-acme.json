@@ -1,0 +1,64 @@
+{
+  "doc_id": "synth-01-acme",
+  "source": "Synthetic. Written for this repository; not a real filing.",
+  "pages": 3,
+  "scanned": false,
+  "fields": [
+    {
+      "name": "revenue_ltm",
+      "value": 24180000.0,
+      "page": 1,
+      "ambiguous": false,
+      "note": ""
+    },
+    {
+      "name": "ebitda_reported",
+      "value": null,
+      "page": null,
+      "ambiguous": true,
+      "note": "Not stated. Derivable as PBT 1,905 + finance costs 842 + D&A 1,204 = 3,951, but the corpus labels what the document states, and a derived figure is a judgement about which add-backs belong."
+    },
+    {
+      "name": "ebitda_addbacks",
+      "value": null,
+      "page": null,
+      "ambiguous": false,
+      "note": "Not stated."
+    },
+    {
+      "name": "total_debt",
+      "value": 10250000.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": "Current borrowings 1,500 plus non-current borrowings 8,750. Both rows are stated; the sum is arithmetic, not judgement."
+    },
+    {
+      "name": "cash",
+      "value": 1842000.0,
+      "page": 2,
+      "ambiguous": false,
+      "note": ""
+    },
+    {
+      "name": "interest_expense",
+      "value": 842000.0,
+      "page": 1,
+      "ambiguous": false,
+      "note": "Printed as (842). The parentheses are an expense convention, not a negative quantity: debt service of 842 is what the statement discloses."
+    },
+    {
+      "name": "principal_repayments",
+      "value": 1500000.0,
+      "page": 3,
+      "ambiguous": false,
+      "note": "Repayment of borrowings 1,500, printed as an outflow."
+    },
+    {
+      "name": "cfads",
+      "value": null,
+      "page": null,
+      "ambiguous": true,
+      "note": "Not disclosed. Operating cash flow of 3,119 is the nearest figure, but CFADS depends on a lender definition of maintenance capex and tax."
+    }
+  ]
+}
