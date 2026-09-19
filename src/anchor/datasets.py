@@ -315,7 +315,11 @@ def import_kleister(
                     note=(
                         f"{spec.name}: imported from '{source_key}' = {raw}. Total "
                         "incoming resources including grants; whether that is revenue "
-                        "for a credit assessment is a lender's call. Page is 1 because "
+                        "for a credit assessment is a lender's call. The label is in GBP "
+                        "and the annotators converted where a charity reports in "
+                        "another currency, so an extractor reading the printed "
+                        "figure disagrees on those documents without misreading "
+                        "the page. Page is 1 because "
                         "the source text carries no page separators."
                     ),
                 )

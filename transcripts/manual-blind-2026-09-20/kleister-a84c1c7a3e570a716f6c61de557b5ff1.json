@@ -1,0 +1,77 @@
+{
+  "fields": [
+    {
+      "name": "revenue_ltm",
+      "value": 122836,
+      "unit_scale": 1.0,
+      "currency": null,
+      "page": 1,
+      "quote": "Total Income \u00a3122,836 \u00a3120,222 \u00a3163,825 \u00a3111,815 \u00a3133,268",
+      "confidence": 0.4
+    },
+    {
+      "name": "ebitda_reported",
+      "value": null,
+      "unit_scale": 1.0,
+      "currency": null,
+      "page": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "name": "ebitda_addbacks",
+      "value": null,
+      "unit_scale": 1.0,
+      "currency": null,
+      "page": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "name": "total_debt",
+      "value": null,
+      "unit_scale": 1.0,
+      "currency": null,
+      "page": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "name": "cash",
+      "value": null,
+      "unit_scale": 1.0,
+      "currency": null,
+      "page": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "name": "interest_expense",
+      "value": null,
+      "unit_scale": 1.0,
+      "currency": null,
+      "page": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "name": "principal_repayments",
+      "value": null,
+      "unit_scale": 1.0,
+      "currency": null,
+      "page": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "name": "cfads",
+      "value": null,
+      "unit_scale": 1.0,
+      "currency": null,
+      "page": null,
+      "quote": null,
+      "confidence": 0.0
+    }
+  ],
+  "latency_s": 0.0
+}

@@ -195,6 +195,39 @@ rather than a chore: adding vocabulary because an eval set revealed it is
 tuning on the test set. Any such change belongs in a held-out split, which is
 why the adapter takes `--split`.
 
+### A manual spot check, which is not a benchmark row
+
+With no API credit available, the six Kleister documents whose labels had not
+been seen were read by hand and the claims replayed through the scoring
+pipeline by `anchor run --extractor offline`. It answers one question: are these
+figures findable at all, or is the 0.0% telling us the task is impossible?
+
+They are findable. Two of six scored correct against a regex that gets none of
+them, and a third was right but uncitable.
+
+**Read this as a sidebar and nothing more.** Six documents, one line item, no
+cost or latency, a different prompt from the one `claude.py` sends, and a reader
+who had the whole project in context. `anchor sweep` excludes offline runs from
+the frontier for that reason, and so should you.
+
+What it exposed is worth more than the score:
+
+- **Bad citations killed three correct answers.** The first pass scored 0.0%,
+  below the regex, because quotes like `"Total Income"` name the row without
+  containing the figure. `value_in_quote` rejected them. The one claim that
+  passed verification was the wrong one.
+- **A retyped quote fails as surely as a fabricated one.** Even the full row was
+  rejected until it was copied out of the page verbatim; a hand-transcribed OCR
+  damage character differed from the document.
+- **A composed figure cannot be cited.** One correct value is the sum of four
+  rows, and no single row states it, so the evidence model has nowhere to point.
+  `total_debt` has the same shape wherever borrowings split across current and
+  non-current.
+- **Confidence ran backwards.** The highest-confidence claim of the six, 0.85,
+  was wrong: a charity reporting in US dollars against a label the annotators
+  had converted to GBP. The lowest, 0.25, was right. That inversion is what
+  AURC is for, and `claude.py` now tells the model never to convert.
+
 ## The regression gate
 
 Extraction pipelines degrade without telling you. A prompt edit or a model

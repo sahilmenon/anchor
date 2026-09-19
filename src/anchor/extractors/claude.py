@@ -170,7 +170,9 @@ null when the document does not state the item.
 taken from the document's own units declaration. A page headed "$'000" gives \
 1000; a page in millions gives 1000000; a figure printed in full units gives 1.
 - `currency`: the ISO code if the document names one, else null. A bare "$" is \
-not enough to name one.
+not enough to name one. Report the figure in the currency the document prints \
+it in and never convert. A charity reporting in US dollars gives a US dollar \
+value and a `currency` of "USD", whatever currency the reader expects.
 - `page`: the 1-indexed page the figure appears on, or null when you abstain.
 - `quote`: text copied character for character from that page, containing the \
 figure. Not a paraphrase, not reformatted, not stitched together from \
