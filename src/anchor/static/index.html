@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anchor</title>
+<style>
+/* Light is the base palette; dark redefines only the tokens. Every colour is
+   defined once on :root so no value exists only inside a media query. */
+:root {
+  --bg: #fbfbfa;
+  --panel: #ffffff;
+  --panel-2: #f5f5f3;
+  --ink: #1a1a19;
+  --ink-2: #565652;
+  --ink-3: #8a8a84;
+  --line: #e3e3de;
+  --line-2: #cfcfc8;
+  --accent: #2f5d50;
+
+  --correct: #2f7a54;
+  --correct-abstention: #3d6ea8;
+  --mismatch: #b07316;
+  --omission: #8a8a84;
+  --ungrounded: #6d4a9c;
+  --hallucination: #b33a32;
+
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14141a;
+    --panel: #1c1c23;
+    --panel-2: #23232b;
+    --ink: #eceaf0;
+    --ink-2: #a9a7b3;
+    --ink-3: #75737f;
+    --line: #2c2c36;
+    --line-2: #3a3a46;
+    --accent: #6fbfa3;
+
+    --correct: #5fb383;
+    --correct-abstention: #7aa5db;
+    --mismatch: #d9a441;
+    --omission: #85838f;
+    --ungrounded: #a98bd8;
+    --hallucination: #e0685e;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14141a;
+  --panel: #1c1c23;
+  --panel-2: #23232b;
+  --ink: #eceaf0;
+  --ink-2: #a9a7b3;
+  --ink-3: #75737f;
+  --line: #2c2c36;
+  --line-2: #3a3a46;
+  --accent: #6fbfa3;
+  --correct: #5fb383;
+  --correct-abstention: #7aa5db;
+  --mismatch: #d9a441;
+  --omission: #85838f;
+  --ungrounded: #a98bd8;
+  --hallucination: #e0685e;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); }
+h1, h2, h3 { line-height: 1.25; margin: 0; font-weight: 600; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px 96px; }
+
+/* ---------- header ---------- */
+header {
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  position: sticky; top: 0; z-index: 20;
+}
+.hdr { max-width: 1180px; margin: 0 auto; padding: 14px 24px;
+       display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand b { font-size: 19px; letter-spacing: -0.015em; }
+.brand span { color: var(--ink-3); font-size: 12px; font-family: var(--mono); }
+.hdr-meta { color: var(--ink-2); font-size: 12.5px; font-family: var(--mono);
+            display: flex; gap: 14px; flex-wrap: wrap; }
+.spacer { flex: 1 1 auto; }
+
+button, select {
+  font: inherit; font-size: 13px;
+  color: var(--ink); background: var(--panel-2);
+  border: 1px solid var(--line-2); border-radius: 7px;
+  padding: 6px 11px; cursor: pointer;
+}
+button:hover, select:hover { border-color: var(--accent); }
+button[disabled] { opacity: .5; cursor: progress; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+/* ---------- layout ---------- */
+section { margin-top: 38px; }
+.sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+.sec-head h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-3); }
+.note { color: var(--ink-2); font-size: 13.5px; max-width: 72ch; margin: 6px 0 16px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+
+/* ---------- metric cards ---------- */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); gap: 12px; }
+.card { padding: 15px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+.card .k { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+.card .v { font-size: 27px; font-weight: 600; letter-spacing: -0.02em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.card .d { font-size: 12px; color: var(--ink-2); margin-top: 3px; }
+.card.warn .v { color: var(--hallucination); }
+.card.good .v { color: var(--correct); }
+
+/* ---------- taxonomy ---------- */
+.taxbar { display: flex; height: 30px; border-radius: 7px; overflow: hidden; border: 1px solid var(--line); }
+.taxbar div { transition: flex-grow .2s; min-width: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 13px; font-size: 13px; }
+.legend span { display: flex; align-items: center; gap: 7px; }
+.dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.legend b { font-variant-numeric: tabular-nums; }
+.legend em { color: var(--ink-3); font-style: normal; font-size: 12px; }
+
+/* ---------- tables ---------- */
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { text-align: left; font-weight: 500; color: var(--ink-3); font-size: 11.5px;
+     text-transform: uppercase; letter-spacing: .05em; padding: 9px 12px;
+     border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 12.5px; }
+.scroll { overflow-x: auto; }
+code, .mono { font-family: var(--mono); font-size: 12.5px; }
+
+/* ---------- outcome pills ---------- */
+.pill { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 11.5px;
+        font-weight: 500; white-space: nowrap; border: 1px solid transparent; }
+.o-correct            { color: var(--correct);            border-color: var(--correct); }
+.o-correct_abstention { color: var(--correct-abstention);  border-color: var(--correct-abstention); }
+.o-mismatch           { color: var(--mismatch);            border-color: var(--mismatch); }
+.o-omission           { color: var(--omission);            border-color: var(--omission); }
+.o-ungrounded         { color: var(--ungrounded);          border-color: var(--ungrounded); }
+.o-hallucination      { color: var(--hallucination);       border-color: var(--hallucination); }
+.o-agree              { color: var(--correct);             border-color: var(--correct); }
+.o-both_abstained     { color: var(--correct-abstention);  border-color: var(--correct-abstention); }
+.o-extraction_abstained { color: var(--omission);          border-color: var(--omission); }
+.o-disagree           { color: var(--mismatch);            border-color: var(--mismatch); }
+.o-golden_abstained   { color: var(--hallucination);       border-color: var(--hallucination); }
+.tag { font-size: 11px; color: var(--ink-3); border: 1px solid var(--line-2);
+       border-radius: 4px; padding: 0 5px; margin-left: 6px; }
+
+/* ---------- documents ---------- */
+details.doc { border-bottom: 1px solid var(--line); }
+details.doc:last-child { border-bottom: none; }
+details.doc > summary {
+  cursor: pointer; padding: 13px 16px; display: flex; gap: 14px;
+  align-items: center; flex-wrap: wrap; list-style: none;
+}
+details.doc > summary::-webkit-details-marker { display: none; }
+details.doc > summary::before { content: "▸"; color: var(--ink-3); font-size: 12px; }
+details.doc[open] > summary::before { content: "▾"; }
+details.doc > summary:hover { background: var(--panel-2); }
+.doc-id { font-family: var(--mono); font-size: 13px; }
+.chips { display: flex; gap: 5px; flex-wrap: wrap; }
+.chip { font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--panel-2);
+        border: 1px solid var(--line); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.doc-body { padding: 4px 16px 20px; }
+.quote {
+  font-family: var(--mono); font-size: 12px; white-space: pre-wrap;
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-left: 3px solid var(--line-2);
+  border-radius: 6px; padding: 8px 11px; margin: 6px 0 0; color: var(--ink-2);
+  max-height: 150px; overflow: auto;
+}
+.quote.bad { border-left-color: var(--ungrounded); }
+.labnote { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; max-width: 78ch; }
+.labnote b { color: var(--ink-3); font-weight: 500; }
+.reason { font-size: 12.5px; color: var(--ink-2); font-style: italic; }
+
+/* ---------- curve ---------- */
+.curve-wrap { display: grid; grid-template-columns: minmax(320px, 1.05fr) minmax(280px, 1fr); gap: 26px; align-items: start; }
+@media (max-width: 920px) { .curve-wrap { grid-template-columns: 1fr; } }
+svg text { fill: var(--ink-3); font-size: 10px; font-family: var(--mono); }
+.kv { font-size: 13.5px; }
+.kv div { display: flex; justify-content: space-between; gap: 16px; padding: 5px 0;
+          border-bottom: 1px dotted var(--line); }
+.kv div:last-child { border-bottom: none; }
+.kv span:last-child { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.banner { padding: 11px 14px; border-radius: 8px; font-size: 13.5px; margin-bottom: 14px;
+          border: 1px solid var(--line-2); background: var(--panel-2); color: var(--ink-2); }
+.banner.bad { border-color: var(--hallucination); color: var(--hallucination); }
+.empty { padding: 40px 16px; text-align: center; color: var(--ink-3); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr">
+    <div class="brand"><b>Anchor</b><span id="version"></span></div>
+    <div class="hdr-meta" id="meta"></div>
+    <div class="spacer"></div>
+    <select id="run-picker" title="Saved runs"></select>
+    <button id="btn-run" class="primary">Run now</button>
+    <button id="btn-theme" title="Toggle theme">◐</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="alert"></div>
+
+  <section id="s-headline">
+    <div class="sec-head"><h2>Headline</h2></div>
+    <p class="note">
+      Accuracy counts only fields the document actually states. Correct abstentions are
+      excluded from it deliberately &mdash; they are measured by abstention precision,
+      the one metric that punishes answering when the honest move was to decline.
+    </p>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section id="s-taxonomy">
+    <div class="sec-head"><h2>Failure taxonomy</h2></div>
+    <p class="note">
+      Every labelled field lands in exactly one bucket, so the counts partition the run.
+      A numerically right answer whose citation failed verification is
+      <em>ungrounded</em>, not correct &mdash; an unverifiable number cannot go in a credit memo.
+    </p>
+    <div class="panel" style="padding:16px">
+      <div class="taxbar" id="taxbar"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </section>
+
+  <section id="s-ratios">
+    <div class="sec-head"><h2>Derived ratios</h2></div>
+    <p class="note">
+      Leverage and DSCR are computed twice by the same plain-Python code &mdash; once from
+      the extraction, once from ground truth &mdash; so a disagreement is always a sourcing
+      error and never arithmetic. Abstention is a result here: a DSCR the document
+      cannot support should come back refused, with the input that killed it named.
+    </p>
+    <div class="cards" id="ratio-cards"></div>
+  </section>
+
+  <section id="s-selective">
+    <div class="sec-head"><h2>Abstention &amp; calibration</h2></div>
+    <p class="note">
+      The curve is the whole accuracy/abstention frontier. The marked point is the
+      split-conformal operating point &mdash; a threshold derived from a held-out
+      calibration split rather than hand-picked, so it carries a finite-sample guarantee
+      instead of a hunch.
+    </p>
+    <div class="panel" style="padding:18px">
+      <div class="curve-wrap">
+        <div><svg id="curve" viewBox="0 0 420 288" width="100%" role="img"
+                  aria-label="Risk against coverage"></svg></div>
+        <div>
+          <div class="kv" id="selective-kv"></div>
+          <p class="note" id="selective-note" style="margin-bottom:0"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s-fields">
+    <div class="sec-head"><h2>Per line item</h2></div>
+    <p class="note">
+      The extractor is only ever asked for line items, never for a ratio. This table is
+      where a systematic sourcing failure shows up as a single bad row.
+    </p>
+    <div class="panel scroll"><table id="field-table"></table></div>
+  </section>
+
+  <section id="s-docs">
+    <div class="sec-head"><h2>Documents</h2></div>
+    <p class="note">
+      Expand a document to see every field with the quote the extractor cited. This is the
+      audit trail: if a figure cannot be traced back to a line on a page, the harness
+      should have rejected it.
+    </p>
+    <div class="panel" id="docs"></div>
+  </section>
+</div>
+
+<script>
+"use strict";
+
+const OUTCOMES = ["correct", "correct_abstention", "mismatch", "omission", "ungrounded", "hallucination"];
+const OUTCOME_HELP = {
+  correct: "value agrees with the label, citation checked out",
+  correct_abstention: "the document does not state it, and the extractor said so",
+  mismatch: "both present, values differ — a sourcing error",
+  omission: "the document states it, the extractor abstained",
+  ungrounded: "a value was produced but its citation did not check out",
+  hallucination: "the document does not state it and a number was produced anyway"
+};
+const RATIO_OUTCOMES = ["agree", "both_abstained", "extraction_abstained", "disagree", "golden_abstained"];
+
+let CURRENT = null;
+
+/* ---------- formatting ---------- */
+const pct = v => v === null || v === undefined ? "n/a" : (v * 100).toFixed(1) + "%";
+const money = v => {
+  if (v === null || v === undefined) return "—";
+  const abs = Math.abs(v);
+  if (abs >= 1e6) return (v / 1e6).toFixed(2) + "m";
+  if (abs >= 1e3) return v.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  return String(Math.round(v * 100) / 100);
+};
+const mult = v => v === null || v === undefined ? "—" : v.toFixed(2) + "×";
+const el = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+};
+const css = name => getComputedStyle(document.documentElement).getPropertyValue("--" + name).trim();
+
+/* ---------- fetch ---------- */
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  const body = await res.json().catch(() => ({ error: res.statusText }));
+  if (!res.ok) throw new Error(body.error || res.statusText);
+  return body;
+}
+
+function alertBox(message, bad) {
+  const box = document.getElementById("alert");
+  box.innerHTML = "";
+  if (!message) return;
+  box.appendChild(el("div", "banner" + (bad ? " bad" : ""), message));
+}
+
+/* ---------- render: headline ---------- */
+function renderCards(run) {
+  const o = run.report.overall;
+  const amb = run.report.on_ambiguous;
+  const cards = [
+    ["Accuracy", pct(o.accuracy), `${o.taxonomy.correct} of ${o.n_answerable} stated fields`, ""],
+    ["Coverage", pct(o.coverage), "stated fields it attempted", ""],
+    ["Grounding", pct(o.grounding_rate), "citations that checked out", ""],
+    ["Hallucination", pct(o.hallucination_rate),
+      `${o.taxonomy.hallucination} of ${o.n_unanswerable} unstated fields`,
+      o.taxonomy.hallucination > 0 ? "warn" : "good"],
+    ["Abstention precision", pct(o.abstention_precision), "declines that were justified", ""],
+    ["On ambiguous", pct(amb.abstention_precision), `${amb.n_fields} judgement-call fields`, ""]
+  ];
+  const host = document.getElementById("cards");
+  host.innerHTML = "";
+  for (const [k, v, d, cls] of cards) {
+    const c = el("div", "card " + cls);
+    c.append(el("div", "k", k), el("div", "v", v), el("div", "d", d));
+    host.appendChild(c);
+  }
+}
+
+/* ---------- render: taxonomy ---------- */
+function renderTaxonomy(run) {
+  const tax = run.report.overall.taxonomy;
+  const total = run.report.n_fields || 1;
+  const bar = document.getElementById("taxbar");
+  const legend = document.getElementById("legend");
+  bar.innerHTML = ""; legend.innerHTML = "";
+
+  for (const name of OUTCOMES) {
+    const n = tax[name] || 0;
+    if (n > 0) {
+      const seg = el("div");
+      seg.style.background = css(name.replace(/_/g, "-"));
+      seg.style.flex = n + " 0 0";
+      seg.title = `${name}: ${n} (${(n / total * 100).toFixed(1)}%)`;
+      bar.appendChild(seg);
+    }
+    const item = el("span");
+    const dot = el("i", "dot");
+    dot.style.background = css(name.replace(/_/g, "-"));
+    const label = el("span");
+    label.append(el("b", null, String(n)), document.createTextNode(" " + name + " "),
+                 el("em", null, "— " + OUTCOME_HELP[name]));
+    label.style.display = "inline";
+    item.append(dot, label);
+    legend.appendChild(item);
+  }
+}
+
+/* ---------- render: ratios ---------- */
+function renderRatios(run) {
+  const r = run.ratios;
+  const host = document.getElementById("ratio-cards");
+  host.innerHTML = "";
+  const unsafe = (r.counts.disagree || 0) + (r.counts.golden_abstained || 0);
+  const cards = [
+    ["Agreement", pct(r.agreement), "same value, or both refused", ""],
+    ["Safety", pct(r.safety), "never asserted without support", unsafe > 0 ? "warn" : "good"],
+    ["Unsupported", String(r.counts.golden_abstained || 0), "ratios truth cannot support",
+      (r.counts.golden_abstained || 0) > 0 ? "warn" : "good"],
+    ["Wrong multiple", String(r.counts.disagree || 0), "both computed, values differ", ""],
+    ["Jointly refused", String(r.counts.both_abstained || 0), "document supports neither", ""]
+  ];
+  for (const [k, v, d, cls] of cards) {
+    const c = el("div", "card " + cls);
+    c.append(el("div", "k", k), el("div", "v", v), el("div", "d", d));
+    host.appendChild(c);
+  }
+}
+
+/* ---------- render: risk-coverage curve ---------- */
+function renderCurve(run) {
+  const svg = document.getElementById("curve");
+  svg.innerHTML = "";
+  const sel = run.selective;
+  const kv = document.getElementById("selective-kv");
+  const note = document.getElementById("selective-note");
+  kv.innerHTML = ""; note.textContent = "";
+
+  if (!sel) { note.textContent = "No scored items in this run."; return; }
+
+  const W = 420, H = 288, P = { t: 26, r: 16, b: 34, l: 48 };
+  const iw = W - P.l - P.r, ih = H - P.t - P.b;
+  const cov = sel.curve.coverage, risk = sel.curve.risk;
+  const maxRisk = Math.max(0.05, ...risk) * 1.15;
+  const X = c => P.l + c * iw;
+  const Y = r => P.t + ih - (r / maxRisk) * ih;
+  const NS = "http://www.w3.org/2000/svg";
+  const add = (tag, attrs, text) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text !== undefined) n.textContent = text;
+    svg.appendChild(n);
+    return n;
+  };
+
+  // axes + gridlines
+  for (let i = 0; i <= 4; i++) {
+    const r = maxRisk * i / 4;
+    add("line", { x1: P.l, x2: W - P.r, y1: Y(r), y2: Y(r),
+                  stroke: css("line"), "stroke-width": 1 });
+    add("text", { x: P.l - 8, y: Y(r) + 3, "text-anchor": "end" }, (r * 100).toFixed(0) + "%");
+  }
+  for (let i = 0; i <= 4; i++) {
+    const c = i / 4;
+    add("text", { x: X(c), y: H - P.b + 16, "text-anchor": "middle" }, (c * 100).toFixed(0) + "%");
+  }
+  // Axis captions sit outside the plot box: the risk caption above the top
+  // gridline, the coverage caption below the tick row, so neither can collide
+  // with a tick label at any data range.
+  add("text", { x: W - P.r, y: H - 4, "text-anchor": "end" }, "coverage (fields answered) →");
+  add("text", { x: 4, y: 11 }, "risk (error among answered)");
+
+  if (cov.length) {
+    // baseline: risk with no abstention at all
+    add("line", { x1: P.l, x2: W - P.r, y1: Y(sel.baseline_error), y2: Y(sel.baseline_error),
+                  stroke: css("ink-3"), "stroke-width": 1, "stroke-dasharray": "3 4" });
+    add("text", { x: W - P.r, y: Y(sel.baseline_error) - 6, "text-anchor": "end" },
+        "answer everything: " + pct(sel.baseline_error));
+
+    const d = cov.map((c, i) => (i ? "L" : "M") + X(c).toFixed(1) + " " + Y(risk[i]).toFixed(1)).join(" ");
+    add("path", { d, fill: "none", stroke: css("accent"), "stroke-width": 2,
+                  "stroke-linejoin": "round" });
+    cov.forEach((c, i) => {
+      add("circle", { cx: X(c), cy: Y(risk[i]), r: 3, fill: css("accent") })
+        .appendChild(Object.assign(document.createElementNS(NS, "title"),
+          { textContent: `coverage ${pct(c)}, risk ${pct(risk[i])}` }));
+    });
+
+    if (sel.threshold_supported && sel.n_test > 0) {
+      add("circle", { cx: X(sel.coverage), cy: Y(sel.error_on_answered), r: 6,
+                      fill: "none", stroke: css("hallucination"), "stroke-width": 2 });
+      // Placement dodges the two things the label can collide with: the right
+      // edge of the viewBox, and the dashed baseline when the operating point
+      // happens to sit close to it.
+      const nearEdge = sel.coverage > 0.82;
+      const nearBaseline = Math.abs(sel.error_on_answered - sel.baseline_error) < maxRisk * 0.12;
+      add("text", {
+        x: nearEdge ? X(sel.coverage) - 10 : X(sel.coverage),
+        y: Y(sel.error_on_answered) + (nearBaseline ? 19 : -11),
+        "text-anchor": nearEdge ? "end" : "middle"
+      }, "conformal");
+    }
+  } else {
+    add("text", { x: W / 2, y: H / 2, "text-anchor": "middle" }, "no answered fields to plot");
+  }
+
+  const rows = [
+    ["AURC (lower is better)", sel.aurc.toFixed(4)],
+    ["Base error, full coverage", pct(sel.baseline_error)],
+    ["alpha (target miss rate)", sel.alpha.toFixed(2)],
+    ["Calibration / test fields", `${sel.n_calibration} / ${sel.n_test}`],
+    ["Correct in calibration", String(sel.n_calibration_correct)],
+    ["Confidence threshold", sel.threshold_supported ? sel.threshold.toFixed(3) : "none valid"],
+    ["Coverage at threshold", sel.threshold_supported ? pct(sel.coverage) : "—"],
+    ["Error on answered", sel.threshold_supported ? pct(sel.error_on_answered) : "—"],
+    ["Error target met", sel.threshold_supported ? (sel.guarantee_held ? "yes" : "no") : "—"]
+  ];
+  for (const [k, v] of rows) {
+    const row = el("div");
+    row.append(el("span", null, k), el("span", null, v));
+    kv.appendChild(row);
+  }
+
+  const notes = [];
+  if (!sel.threshold_supported) {
+    notes.push("The calibration split is too small to carry a guarantee at this alpha, so the " +
+      "threshold admits nothing and coverage is zero. That is the honest result: it says " +
+      "collect more calibration data, or loosen alpha — not that the pipeline is broken.");
+  } else if (!sel.guarantee_held) {
+    notes.push("The retention guarantee holds by construction; a missed error target means the " +
+      "confidence signal does not separate correct extractions from incorrect ones. The " +
+      "threshold is not the problem — the confidences are.");
+  }
+  if (!sel.aurc_is_informative) {
+    notes.push("AURC is not informative here: only " + sel.n_distinct_confidences +
+      " distinct confidence value(s) were reported, so the curve is a few points wide and its " +
+      "area mostly measures that width rather than how well the confidences rank.");
+  }
+  note.textContent = notes.join(" ");
+}
+
+/* ---------- render: per line item ---------- */
+function renderFields(run) {
+  const table = document.getElementById("field-table");
+  table.innerHTML = "";
+  const head = table.createTHead().insertRow();
+  for (const h of ["Line item", "n", "Stated", "Accuracy", "Coverage", "Grounding", "Abstentions"]) {
+    const th = document.createElement("th");
+    th.textContent = h;
+    if (h !== "Line item") th.style.textAlign = "right";
+    head.appendChild(th);
+  }
+  const body = table.createTBody();
+  for (const [name, s] of Object.entries(run.report.per_field)) {
+    const tr = body.insertRow();
+    tr.insertCell().appendChild(el("span", "mono", name));
+    for (const v of [String(s.n_fields), String(s.n_answerable), pct(s.accuracy),
+                     pct(s.coverage), pct(s.grounding_rate), String(s.n_abstained)]) {
+      const td = tr.insertCell();
+      td.className = "num";
+      td.textContent = v;
+    }
+  }
+}
+
+/* ---------- render: documents ---------- */
+function fieldRow(f) {
+  const tr = document.createElement("tr");
+
+  const c0 = tr.insertCell();
+  c0.appendChild(el("span", "mono", f.name));
+  if (f.ambiguous) {
+    const t = el("span", "tag", "ambiguous");
+    t.title = "labelling this took a judgement call; abstaining here is defensible";
+    c0.appendChild(t);
+  }
+
+  tr.insertCell().appendChild(el("span", "pill o-" + f.outcome, f.outcome.replace(/_/g, " ")));
+
+  const exp = tr.insertCell(); exp.className = "num"; exp.textContent = money(f.expected);
+  const act = tr.insertCell(); act.className = "num"; act.textContent = money(f.actual);
+
+  const g = tr.insertCell(); g.className = "num";
+  g.textContent = f.grounded === true ? "yes" : f.grounded === false ? "no" : "—";
+  if (f.grounded === false) g.style.color = css("ungrounded");
+
+  const ev = tr.insertCell();
+  if (f.quote) {
+    const q = el("div", "quote" + (f.grounded === false ? " bad" : ""));
+    q.textContent = f.quote;
+    const cap = el("div", "labnote");
+    cap.append(el("b", null, `page ${f.page}`),
+      document.createTextNode(
+        `  ·  confidence ${f.confidence?.toFixed(2) ?? "—"}` +
+        `  ·  read ${money(f.raw_value)} × ${f.unit_scale ?? 1} scale`));
+    ev.append(q, cap);
+  } else if (f.actual === null) {
+    ev.appendChild(el("div", "reason", "abstained — no claim, nothing to ground"));
+  }
+  if (f.note) {
+    const n = el("div", "labnote");
+    n.append(el("b", null, "label note: "), document.createTextNode(f.note));
+    ev.appendChild(n);
+  }
+  return tr;
+}
+
+function ratioBlock(doc) {
+  const wrap = el("div");
+  wrap.appendChild(el("div", "sec-head")).appendChild(el("h2", null, "Derived ratios"));
+  const table = document.createElement("table");
+  const head = table.createTHead().insertRow();
+  for (const h of ["Ratio", "Verdict", "From extraction", "From truth", "Why"]) {
+    const th = document.createElement("th");
+    th.textContent = h;
+    head.appendChild(th);
+  }
+  const body = table.createTBody();
+  for (const r of doc.ratios) {
+    const tr = body.insertRow();
+    tr.insertCell().appendChild(el("span", "mono", r.name));
+    tr.insertCell().appendChild(el("span", "pill o-" + r.outcome, r.outcome.replace(/_/g, " ")));
+    const isMult = r.name === "leverage" || r.name === "dscr";
+    const a = tr.insertCell(); a.className = "num";
+    a.textContent = isMult ? mult(r.extracted) : money(r.extracted);
+    const b = tr.insertCell(); b.className = "num";
+    b.textContent = isMult ? mult(r.expected) : money(r.expected);
+    const why = tr.insertCell();
+    if (r.extracted_reason) {
+      why.appendChild(el("div", "reason", "extraction: " + r.extracted_reason));
+    }
+    if (r.expected_reason) {
+      why.appendChild(el("div", "reason", "truth: " + r.expected_reason));
+    }
+  }
+  const panel = el("div", "panel scroll");
+  panel.style.marginTop = "8px";
+  panel.appendChild(table);
+  wrap.appendChild(panel);
+  return wrap;
+}
+
+function renderDocs(run) {
+  const host = document.getElementById("docs");
+  host.innerHTML = "";
+  if (!run.documents.length) {
+    host.appendChild(el("div", "empty", "No documents scored."));
+    return;
+  }
+
+  for (const doc of run.documents) {
+    const counts = {};
+    for (const f of doc.fields) counts[f.outcome] = (counts[f.outcome] || 0) + 1;
+
+    const d = el("details", "doc");
+    const s = el("summary");
+    s.appendChild(el("span", "doc-id", doc.doc_id));
+    const chips = el("div", "chips");
+    chips.appendChild(el("span", "chip", doc.n_pages + "p"));
+    if (doc.scanned) chips.appendChild(el("span", "chip", "scanned"));
+    for (const name of OUTCOMES) {
+      if (!counts[name]) continue;
+      const chip = el("span", "chip", counts[name] + " " + name.replace(/_/g, " "));
+      chip.style.color = css(name.replace(/_/g, "-"));
+      chip.style.borderColor = css(name.replace(/_/g, "-"));
+      chips.appendChild(chip);
+    }
+    s.appendChild(chips);
+    d.appendChild(s);
+
+    const body = el("div", "doc-body");
+    if (doc.error) body.appendChild(el("div", "banner bad", doc.error));
+
+    const table = document.createElement("table");
+    const head = table.createTHead().insertRow();
+    for (const h of ["Line item", "Outcome", "Expected", "Extracted", "Grounded", "Evidence"]) {
+      const th = document.createElement("th");
+      th.textContent = h;
+      if (["Expected", "Extracted", "Grounded"].includes(h)) th.style.textAlign = "right";
+      head.appendChild(th);
+    }
+    const tbody = table.createTBody();
+    for (const f of doc.fields) tbody.appendChild(fieldRow(f));
+    const panel = el("div", "panel scroll");
+    panel.appendChild(table);
+    body.appendChild(panel);
+    body.appendChild(ratioBlock(doc));
+    d.appendChild(body);
+    host.appendChild(d);
+  }
+}
+
+/* ---------- top level ---------- */
+function render(run) {
+  CURRENT = run;
+  const o = run.report.overall;
+  document.getElementById("meta").innerHTML = "";
+  const bits = [
+    run.extractor,
+    run.corpus_root,
+    run.report.n_documents + " docs",
+    run.report.n_fields + " fields",
+    run.created_at
+  ];
+  for (const b of bits) document.getElementById("meta").appendChild(el("span", null, b));
+
+  const warnings = [];
+  if (!run.verified) {
+    warnings.push("This run skipped quote verification, so accuracy is an upper bound and " +
+      "the ungrounded bucket is empty by construction.");
+  }
+  if (run.skipped && run.skipped.length) {
+    warnings.push(run.skipped.length + " labelled document(s) have no source file and are " +
+      "excluded from every rate on this page: " + run.skipped.join(", ") + ".");
+  }
+  const errored = run.documents.filter(d => d.error);
+  if (errored.length) {
+    warnings.push(errored.length + " document(s) could not be read: " +
+      errored.map(d => d.doc_id).join(", ") + ".");
+  }
+  alertBox(warnings.join(" "), warnings.length > 0);
+
+  void o;
+  renderCards(run);
+  renderTaxonomy(run);
+  renderRatios(run);
+  renderCurve(run);
+  renderFields(run);
+  renderDocs(run);
+}
+
+async function refreshPicker(selectId) {
+  const picker = document.getElementById("run-picker");
+  const { runs } = await api("/api/runs");
+  picker.innerHTML = "";
+  if (!runs.length) {
+    picker.appendChild(new Option("no saved runs", ""));
+    picker.disabled = true;
+    return;
+  }
+  picker.disabled = false;
+  for (const r of runs) {
+    const label = r.error
+      ? `${r.run_id} (unreadable)`
+      : `${r.created_at}  ${r.extractor}  acc ${pct(r.accuracy)}`;
+    picker.appendChild(new Option(label, r.run_id));
+  }
+  if (selectId) picker.value = selectId;
+}
+
+async function runNow() {
+  const btn = document.getElementById("btn-run");
+  btn.disabled = true;
+  btn.textContent = "Running…";
+  try {
+    const run = await api("/api/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({})
+    });
+    render(run);
+    await refreshPicker(run.run_id);
+  } catch (e) {
+    alertBox("Run failed: " + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Run now";
+  }
+}
+
+document.getElementById("btn-run").addEventListener("click", runNow);
+
+document.getElementById("run-picker").addEventListener("change", async ev => {
+  if (!ev.target.value) return;
+  try {
+    render(await api("/api/runs/" + encodeURIComponent(ev.target.value)));
+  } catch (e) {
+    alertBox("Could not load that run: " + e.message, true);
+  }
+});
+
+document.getElementById("btn-theme").addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  const current = root.getAttribute("data-theme") || (dark ? "dark" : "light");
+  root.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+  if (CURRENT) renderCurve(CURRENT);   // the SVG reads colours from CSS variables
+});
+
+(async function boot() {
+  try {
+    const cfg = await api("/api/config");
+    document.getElementById("version").textContent = "v" + cfg.version;
+    await refreshPicker();
+    const picker = document.getElementById("run-picker");
+    if (picker.value) {
+      render(await api("/api/runs/" + encodeURIComponent(picker.value)));
+    } else {
+      await runNow();
+    }
+  } catch (e) {
+    alertBox("Could not start: " + e.message, true);
+  }
+})();
+</script>
+</body>
+</html>

@@ -28,6 +28,12 @@ anchor = "anchor.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# The web interface is one HTML file served verbatim by anchor.web. It ships as
+# package data rather than being embedded in a Python string so it can be
+# edited as HTML, with syntax highlighting and a linter that understands it.
+[tool.setuptools.package-data]
+anchor = ["static/*.html"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
