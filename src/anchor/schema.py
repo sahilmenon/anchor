@@ -35,6 +35,35 @@ class LineItem(str, Enum):
     CFADS = "cfads"
 
 
+#: Line items whose printed sign is a presentation convention, not part of the
+#: value.
+#:
+#: A statement prints interest and principal as outflows -- ``(842)``, ``-1,043``
+#: -- because they reduce cash, not because the quantity is negative. Debt
+#: service of 842 is what the document discloses, and that magnitude is what
+#: every downstream consumer wants: DSCR divides by interest + principal, and a
+#: negative leg turns the ratio into something that looks like a coverage
+#: multiple and is not one.
+#:
+#: So the harness fixes one canonical representation and states it here:
+#: **magnitude items are stored positive.** Extractors normalise to it, golden
+#: labels follow it, `anchor.verify` reads a sign difference against the quote
+#: as a convention rather than a mismatch, and `anchor.ratios` checks the
+#: convention instead of assuming it.
+#:
+#: Deliberately not in this set:
+#:
+#: * ``CFADS`` -- a business can genuinely burn cash, and a negative CFADS is a
+#:   reportable DSCR, not a misread sign.
+#: * ``EBITDA_ADDBACKS`` -- an adjustment can genuinely be a deduction.
+#: * ``REVENUE_LTM``, ``TOTAL_DEBT``, ``CASH``, ``EBITDA_REPORTED`` -- a negative
+#:   here is either a real (if unusual) figure or an extraction error, and
+#:   neither is a convention to normalise away.
+MAGNITUDE_ITEMS: frozenset[LineItem] = frozenset(
+    {LineItem.INTEREST_EXPENSE, LineItem.PRINCIPAL_REPAYMENTS}
+)
+
+
 class Evidence(BaseModel):
     """Where a value came from in the source document.
 

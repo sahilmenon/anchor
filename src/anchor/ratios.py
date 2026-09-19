@@ -276,6 +276,35 @@ def dscr(data: RatioInput) -> RatioResult:
         )
 
     assert interest is not None and principal is not None
+
+    # MAGNITUDE_ITEMS declares that debt-service legs are stored positive.
+    # Check it rather than assume it. An extractor that passed a printed
+    # "(1,043)" straight through hands us a negative leg, and the two legs then
+    # net against each other: a genuine 1,043 of interest and 2,400 of
+    # principal would come out as debt service of 1,357, or as a negative that
+    # this function reads as "undefined". Both are wrong, and the first is
+    # wrong in the direction that flatters the borrower, which is the direction
+    # a credit harness must never fail in silently.
+    negative = [
+        _label(n)
+        for n, v in (
+            (LineItem.INTEREST_EXPENSE, interest),
+            (LineItem.PRINCIPAL_REPAYMENTS, principal),
+        )
+        if v < 0
+    ]
+    if negative:
+        return RatioResult(
+            "dscr",
+            None,
+            [],
+            True,
+            (
+                f"{', '.join(negative)} is negative; debt service is stored as a "
+                "positive magnitude, so this input cannot be netted into a ratio"
+            ),
+        )
+
     debt_service = interest + principal
     if debt_service <= 0:
         return RatioResult(

@@ -365,14 +365,51 @@ def test_verify_field_negative_value_from_parenthesised_quote():
     assert verify_field(f, make_doc()).grounded is True
 
 
-def test_verify_field_sign_flip_is_caught():
+def test_verify_field_sign_flip_is_caught_on_an_ordinary_item():
+    """Outside MAGNITUDE_ITEMS a sign flip is a real disagreement with evidence."""
+    f = field(
+        name=LineItem.EBITDA_ADDBACKS,
+        value=1234.0,
+        page=3,
+        quote="Interest expense was (1,234) for the year.",
+    )
+    assert verify_field(f, make_doc()).grounded is False
+
+
+def test_verify_field_accepts_a_magnitude_against_a_parenthesised_quote():
+    """Debt-service items are stored positive by convention.
+
+    Reading the convention correctly must not cost the field its grounding, or
+    the harness punishes an extractor for doing the right thing.
+    """
     f = field(
         name=LineItem.INTEREST_EXPENSE,
         value=1234.0,
         page=3,
         quote="Interest expense was (1,234) for the year.",
     )
+    assert verify_field(f, make_doc()).grounded is True
+
+
+def test_magnitude_matching_does_not_relax_the_hallucination_check():
+    """Ignoring the sign must not start accepting figures that are not there."""
+    f = field(
+        name=LineItem.INTEREST_EXPENSE,
+        value=9999.0,
+        page=3,
+        quote="Interest expense was (1,234) for the year.",
+    )
     assert verify_field(f, make_doc()).grounded is False
+
+
+def test_a_units_header_cannot_ground_a_reported_zero():
+    """A scale marker contains three zeroes and is not a figure.
+
+    Without this, any page carrying a units declaration could ground a
+    fabricated zero -- and a zero reads as a real answer all the way downstream.
+    """
+    assert not value_in_quote(0.0, "All amounts in A$'000")
+    assert not value_in_quote(0.0, "Amounts in $ '000 unless otherwise stated")
 
 
 def test_verify_field_empty_document():

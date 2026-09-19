@@ -32,7 +32,13 @@ from pathlib import Path
 from typing import NamedTuple
 
 from anchor.extractors.base import Document
-from anchor.schema import Evidence, ExtractedField, Extraction, LineItem
+from anchor.schema import (
+    MAGNITUDE_ITEMS,
+    Evidence,
+    ExtractedField,
+    Extraction,
+    LineItem,
+)
 
 # --------------------------------------------------------------------------
 # Confidence tiers
@@ -292,6 +298,31 @@ def _looks_like_a_year(token: str, has_currency: bool, has_suffix: bool) -> bool
     return bool(re.fullmatch(r"(19|20)\d{2}", token))
 
 
+def _looks_like_a_units_marker(text: str, match: re.Match[str]) -> bool:
+    """Is this "number" really the tail of a units declaration?
+
+    ``A$'000`` contains the digits ``000``, and nothing else in the pattern
+    stops them being read as a value of zero. That is not a cosmetic misparse:
+    a statement row whose label wraps onto its own line is followed by the
+    units line more often than not, so the wrap-following rule in `_scan` would
+    attach a zero to the label above it. The field then reports 0 with a real
+    quote and a real page, and a zero passes every sanity check a reader might
+    apply to the ratio it feeds.
+
+    Two signatures, both cheap:
+
+    * The digits sit immediately after an apostrophe -- ``$'000``, ``'000``.
+      Nothing else in a financial statement writes a figure that way, and a
+      genuine value never has an apostrophe fused to its first digit.
+    * The digits are exactly ``000``. A real zero prints as ``0``, ``-`` or
+      ``nil``; three bare zeroes are a scale marker ("in 000s"), never an amount.
+    """
+    start = match.start("num")
+    if start > 0 and text[start - 1] in "'‘’ʼ":
+        return True
+    return match.group("num") == "000"
+
+
 def parse_number(text: str, start: int = 0) -> ParsedNumber | None:
     """Find the first *plausible* number in ``text`` at or after ``start``.
 
@@ -307,6 +338,9 @@ def parse_number(text: str, start: int = 0) -> ParsedNumber | None:
         has_currency = match.group("cur") is not None
 
         if _looks_like_a_year(token, has_currency, bool(suffix)):
+            continue
+
+        if _looks_like_a_units_marker(text, match):
             continue
 
         # "Note 12" / "note 12(b)" -- a cross-reference, not a value.
@@ -479,9 +513,18 @@ class HeuristicExtractor:
                 # top would multiply it twice.
                 scale = parsed.inline_scale if parsed.inline_scale != 1.0 else unit_scale
 
+                # Debt-service items are stored as positive magnitudes; see
+                # MAGNITUDE_ITEMS in anchor.schema. The parentheses around
+                # "(1,043)" say the cash went out, not that the borrower owes
+                # negative interest, and passing the printed sign through nets
+                # the two legs of debt service against each other and inflates
+                # DSCR in the direction that flatters the borrower. The quote
+                # keeps the figure as printed, so the audit trail is unchanged.
+                value = abs(parsed.value) if hit.item in MAGNITUDE_ITEMS else parsed.value
+
                 found[hit.item] = ExtractedField(
                     name=hit.item,
-                    value=parsed.value,
+                    value=value,
                     unit_scale=scale,
                     currency=currency,
                     evidence=Evidence(page=page_no, quote=quote),

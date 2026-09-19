@@ -107,8 +107,10 @@ def test_always_emits_every_line_item() -> None:
         (LineItem.EBITDA_ADDBACKS, 6_150),
         (LineItem.TOTAL_DEBT, 286_500),
         (LineItem.CASH, 27_430),
-        (LineItem.INTEREST_EXPENSE, -18_762),
-        (LineItem.PRINCIPAL_REPAYMENTS, -24_000),
+        # Stored positive: both are MAGNITUDE_ITEMS, and the document prints
+        # them parenthesised because they are outflows.
+        (LineItem.INTEREST_EXPENSE, 18_762),
+        (LineItem.PRINCIPAL_REPAYMENTS, 24_000),
         (LineItem.CFADS, 88_004),
     ],
 )
@@ -222,11 +224,45 @@ def test_parse_number_rejects_implausible_candidates(text: str) -> None:
     assert parse_number(text) is None
 
 
-def test_parenthesised_negatives_flow_through_to_the_field() -> None:
+def test_parenthesised_debt_service_is_stored_as_a_magnitude() -> None:
+    """Parentheses on a debt-service row mean "outflow", not "negative".
+
+    Passing the printed sign through nets one leg of debt service against the
+    other, understating it and overstating DSCR -- the direction that flatters
+    a borrower, which is the direction this harness must not fail in quietly.
+    """
     page = "Statement of cash flows\nRepayment of borrowings   (24,000)\n"
     field = _extract([page]).get(LineItem.PRINCIPAL_REPAYMENTS)
-    assert field.value == -24_000
+    assert field.value == 24_000
     assert not math.isnan(field.value)
+
+
+def test_parenthesised_negatives_survive_on_items_that_are_not_magnitudes() -> None:
+    """The convention is scoped to debt service, not applied everywhere.
+
+    An add-back can genuinely be a deduction, so its sign is part of the value.
+    """
+    page = "Reconciliation\nNormalisation adjustments   (1,200)\n"
+    field = _extract([page]).get(LineItem.EBITDA_ADDBACKS)
+    assert field.value == -1_200
+
+
+def test_a_units_declaration_is_not_read_as_a_value() -> None:
+    """A label that wraps onto its own line must not pick up the scale marker.
+
+    "$'000" contains the digits 000. Reading them as a figure attaches a zero to
+    the label above it, with a real page and a real quote behind it, and a zero
+    survives every downstream sanity check a reader might apply.
+    """
+    page = "Total interest bearing liabilities\n$'000\n\nBank overdraft   420\n"
+    field = _extract([page]).get(LineItem.TOTAL_DEBT)
+    assert field is not None
+    assert field.value != 0
+
+
+@pytest.mark.parametrize("text", ["A$'000", "$ '000", "'000", "in 000s"])
+def test_parse_number_rejects_units_markers(text: str) -> None:
+    assert parse_number(text) is None
 
 
 def test_year_in_a_column_heading_is_not_mistaken_for_a_value() -> None:

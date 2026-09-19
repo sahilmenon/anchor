@@ -25,7 +25,7 @@ import re
 import unicodedata
 
 from anchor.extractors.base import Document
-from anchor.schema import ExtractedField, Extraction
+from anchor.schema import MAGNITUDE_ITEMS, ExtractedField, Extraction
 
 __all__ = [
     "normalise",
@@ -133,12 +133,15 @@ _SUFFIX_ALT = "|".join(sorted(_SUFFIXES, key=len, reverse=True))
 # One number as it appears in a financial statement. Every adornment is
 # optional except the digits themselves.
 #
-#   (?<![\w.])  -- do not start mid-token ("note3", "v1.2" are not figures)
+#   (?<![\w.'])  -- do not start mid-token ("note3", "v1.2"), and do not read
+#                  the digits out of a units marker ("$'000" is a scale, not a
+#                  zero). Without the apostrophe a page header could ground a
+#                  reported value of 0.
 #   open/close  -- accounting parentheses, which mean NEGATIVE, not grouping
 #   cur         -- $, £, €, optionally prefixed (A$, US$, S$, HK$)
 #   trailsign   -- some systems print the minus after the digits ("1,234-")
 _NUMBER_PATTERN = rf"""
-    (?<![\w.])
+    (?<![\w.'])
     (?P<open>\()?[ ]?
     (?P<cur>(?:a|us|nz|s|hk|c|r)?[ ]?[$£€¥])?[ ]?
     (?P<sign>[-+])?[ ]?
@@ -248,6 +251,7 @@ def value_in_quote(
     quote: str,
     unit_scale: float = 1.0,
     rel_tol: float = 0.01,
+    match_magnitude: bool = False,
 ) -> bool:
     """Does a number matching `value` actually appear inside `quote`?
 
@@ -264,6 +268,16 @@ def value_in_quote(
     re-derive: a quote printing "1,234.6" should still ground a reported
     1,235. Exact equality would reject correct extractions as hallucinations,
     which is the more expensive error for an auditability harness to make.
+
+    `match_magnitude` compares absolute values, and is for the line items in
+    `MAGNITUDE_ITEMS` only. Those are stored positive by convention while the
+    statement prints them as outflows, so an extractor that obeys the
+    convention reports 842 against a quote reading "(842)". Grounding asks
+    whether the figure the extractor read is in the quote; on these items the
+    sign is a reading of a presentation convention, not part of the figure, and
+    rejecting the field would punish an extractor for getting the convention
+    right. It stays off by default: everywhere else a sign flip is a real
+    disagreement with the evidence and must fail.
     """
     numbers = _iter_numbers(normalise(quote))
     if not numbers:
@@ -272,6 +286,10 @@ def value_in_quote(
     targets = [value]
     if unit_scale not in (1.0, 0.0):
         targets.append(value * unit_scale)
+
+    if match_magnitude:
+        numbers = [abs(n) for n in numbers]
+        targets = [abs(t) for t in targets]
 
     return any(_close(n, t, rel_tol) for n in numbers for t in targets)
 
@@ -294,6 +312,10 @@ def verify_field(field: ExtractedField, doc: Document) -> ExtractedField:
       * quote not on cited page   -> False
       * quote present, value absent -> False  (hallucinated citation)
       * otherwise                 -> True
+
+    For a line item in `MAGNITUDE_ITEMS` the value check compares magnitudes,
+    because those items are stored positive while a statement prints them
+    parenthesised. See `value_in_quote`.
     """
     out = field.model_copy(deep=True)
 
@@ -315,7 +337,12 @@ def verify_field(field: ExtractedField, doc: Document) -> ExtractedField:
         out.grounded = False
         return out
 
-    out.grounded = value_in_quote(out.value, ev.quote, out.unit_scale)
+    out.grounded = value_in_quote(
+        out.value,
+        ev.quote,
+        out.unit_scale,
+        match_magnitude=out.name in MAGNITUDE_ITEMS,
+    )
     return out
 
 
