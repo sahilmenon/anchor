@@ -15,6 +15,13 @@ out/
 corpus/pdfs/*.pdf
 !corpus/pdfs/.gitkeep
 
+# Corpora imported from external datasets. Kleister-Charity declares no
+# licence, so labels derived from it stay on the machine that built them.
+# Provenance goes in corpus/sources.md; the adapter is committed, its output
+# is not.
+corpus/kleister-charity/
+corpus/ledger/
+
 # AI tooling — never commit
 .claude/
 .cursor/
