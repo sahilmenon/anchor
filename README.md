@@ -288,10 +288,10 @@ Each one plants a specific failure mode that real documents contain, and
 
 ## Known limits
 
-- **The real corpus has no labelled documents.** Everything in this README was
-  measured on six invented ones. The specification targets 12–15 real filings,
-  and at that size confidence intervals are still wide. Every figure reports its
-  N, and none of them is a benchmark.
+- **Both corpora are small.** Six invented documents and fifteen imported ones.
+  Confidence intervals are wide, one document moves accuracy by several points,
+  and the ordering between two close extractors is not established. Every figure
+  reports its N.
 - **An imported corpus measures one field.** Kleister annotates charity income
   and nothing else Anchor tracks, so seven of eight line items are omitted from
   its golden records rather than labelled absent. It also ships no page
