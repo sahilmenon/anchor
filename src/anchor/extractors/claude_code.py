@@ -69,6 +69,13 @@ _JSON_BLOCK = re.compile(r"\{.*\}", re.DOTALL)
 #: to the transport.
 NO_TOOLS = ("--disallowedTools", "*")
 
+#: `--disallowedTools` is variadic, so anything after it on the command line is
+#: read as another tool name. Passing the prompt there fed the document's own
+#: text into a permission flag -- the CLI answered with one parse complaint per
+#: word and ran nothing. The prompt goes on stdin for that reason, and the
+#: reason is worth keeping: a prompt built from an untrusted PDF must never sit
+#: where an argument parser can reach it.
+
 
 def cli_available() -> bool:
     """Is the Claude Code CLI on PATH?
@@ -130,9 +137,7 @@ class ClaudeCodeExtractor(ClaudeExtractor):
         prompt = _flatten(request)
 
         try:
-            stdout = self.runner(
-                [self.executable, "-p", *NO_TOOLS, prompt], None, self.timeout_s
-            )
+            stdout = self.runner([self.executable, "-p", *NO_TOOLS], prompt, self.timeout_s)
         except subprocess.TimeoutExpired:
             return _Attempt(fields={}, problems=[], error=f"timed out after {self.timeout_s:g}s")
         except FileNotFoundError:
@@ -207,8 +212,14 @@ def _run_cli(argv: list[str], stdin_text: str | None, timeout: float) -> str:
     so the one place that spawns a process is obvious to a reader auditing what
     this extractor does.
     """
+    # Windows ships the CLI as claude.CMD, which CreateProcess will not launch
+    # from a bare name. Resolving it here keeps the callers using "claude".
+    resolved = shutil.which(argv[0])
+    if resolved is None:
+        raise FileNotFoundError(argv[0])
+
     completed = subprocess.run(
-        argv,
+        [resolved, *argv[1:]],
         input=stdin_text,
         capture_output=True,
         text=True,

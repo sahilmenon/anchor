@@ -45,7 +45,7 @@ def runner_returning(*responses):
     calls = []
 
     def run(argv, stdin, timeout):
-        calls.append({"argv": argv, "prompt": argv[-1], "timeout": timeout})
+        calls.append({"argv": argv, "prompt": stdin, "timeout": timeout})
         payload = seq.pop(0)
         if isinstance(payload, Exception):
             raise payload
@@ -162,12 +162,16 @@ class TestNestedSessionIsSandboxed:
         assert "--disallowedTools" in argv
         assert argv[argv.index("--disallowedTools") + 1] == "*"
 
-    def test_the_flag_precedes_the_prompt(self, doc) -> None:
-        """Order matters: the CLI reads flags before the positional query."""
+    def test_the_prompt_never_reaches_the_command_line(self, doc) -> None:
+        """`--disallowedTools` is variadic, so a trailing prompt is read as more
+        tool names. The document's text would then be parsed as permission
+        config. It goes on stdin instead, and no argument carries page text."""
         run = runner_returning(reply())
         ClaudeCodeExtractor(runner=run).extract_document(doc, "acme")
-        argv = run.calls[0]["argv"]
-        assert argv.index("--disallowedTools") < len(argv) - 1
+        call = run.calls[0]
+        assert "Total revenue" in call["prompt"]
+        assert not any("Total revenue" in arg for arg in call["argv"])
+        assert call["argv"][-1] == "*"
 
     def test_an_injected_instruction_cannot_escape_the_quote_check(self) -> None:
         """Worst case: a document tells the model to invent a figure.

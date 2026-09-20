@@ -17,11 +17,12 @@ only the third question tells them apart.
 
 ![The run view: headline rates and the failure taxonomy](docs/images/run-overview.jpg)
 
-> **Read this before the numbers.** The real corpus is not populated yet.
-> `corpus/golden/` is empty. Every figure below comes from six invented
-> documents in `corpus/synthetic/`, and none of them is a benchmark result. The
-> LLM extractor is built and tested but **has never been run against a model**,
-> so the head-to-head table is empty. Both gaps are marked where they appear.
+> **Read this before the numbers.** `corpus/golden/` is empty, so the synthetic
+> figures below come from six invented documents and none is a benchmark result.
+> One model row is measured, through the Claude Code CLI rather than the API, on
+> a machine with a subscription and no credits. It reports no token usage, so it
+> has no cost column and cannot name which model answered. The three API rows
+> are still dashes. Every gap is marked where it appears.
 
 ## The design decision everything else follows from
 
@@ -138,19 +139,32 @@ anchor sweep --corpus corpus/synthetic
 | Extractor | Accuracy | Grounding | Abstention precision | $/doc | p50 latency |
 |---|---|---|---|---|---|
 | `heuristic` (regex baseline) | 59.4% | 93.3% | 88.9% | $0 | 0.02s |
+| `claude-code` (subscription CLI) | **84.4%** | 100.0% | 85.0% | n/a | 37.8s |
 | `claude-haiku-4-5` | not run | not run | not run | not run | not run |
 | `claude-sonnet-5` | not run | not run | not run | not run | not run |
 | `claude-opus-5` | not run | not run | not run | not run | not run |
 
-**Those rows say "not run" because the sweep has never run.** It needs an API
-key, and this repository has never had one. Filling them in is one command; the
-dashes stay until it has been run, because a number nobody measured is worth
-less than an obvious gap.
+The `claude-code` row was measured on 2026-09-20 and the three below it were
+not. They need prepaid API credits, which this machine does not have; a Claude
+subscription pays for Claude Code and Anthropic bills the two separately. So
+the measured row travels through the CLI's headless mode instead, and inherits
+everything else from the API extractor: same prompt, same schema, same
+coercion, same quote check, same retry-and-abstain.
+
+Read that row with two blanks in mind. **The cost cell is `n/a`, not `$0`.** The
+CLI reports no token usage, so putting it beside a priced model compares one
+measured axis against a missing one. And **it cannot say which model answered**,
+because the CLI uses whatever the local install is configured with. The run
+records `claude-code` rather than a model id for that reason.
 
 The row that matters is not the most accurate one. It is whichever row is
-cheapest at acceptable accuracy, and the sweep marks the frontier so that is
-readable directly. A finding like "Haiku reaches 94% of Opus's accuracy at 8%
-of the cost" is a procurement decision rather than a benchmark.
+cheapest at acceptable accuracy, which is the comparison the missing cost cell
+blocks and an API key would restore.
+
+The nested session runs with `--disallowedTools "*"`. The prompt is the text of
+a third-party PDF, so the thing reading it gets no filesystem and no network. A
+filing that tries to hijack the extractor spoils one extraction and reaches
+nothing else, and the quote check still catches the figure it invented.
 
 ## The first real-document result
 
@@ -167,15 +181,20 @@ anchor run --corpus corpus/kleister-charity
 ```
 
 On fifteen real charity reports the regex baseline scores **0.0% accuracy**,
-against 59.4% on the synthetic corpus:
+against 59.4% on the synthetic corpus. The model row, run on the same fifteen
+documents, reaches 35.7%:
 
-| | Synthetic (6 docs) | Kleister Charity (15 docs) |
-|---|---|---|
-| Accuracy | 59.4% | **0.0%** |
-| Coverage | 90.6% | 21.4% |
-| Omission | 6.2% | 73.3% |
-| Grounding | 93.3% | 100.0% |
-| Hallucination | 6.2% | 0.0% |
+| | Baseline, synthetic | Baseline, Kleister | `claude-code`, Kleister |
+|---|---|---|---|
+| Accuracy | 59.4% | **0.0%** | **35.7%** |
+| Coverage | 90.6% | 21.4% | 35.7% |
+| Omission | 6.2% | 73.3% | 60.0% |
+| Grounding | 93.3% | 100.0% | 100.0% |
+| Hallucination | 6.2% | 0.0% | 0.0% |
+
+Fifteen documents and one line item, so treat 35.7% as a direction rather than
+a figure: two documents either way move it by 14 points. It is enough to settle
+one question the 0.0% left open. The income was findable.
 
 The diagnosis is vocabulary, and the harness produced it directly. UK charity
 accounts are written to the SORP, so revenue appears as `incoming resources`
@@ -189,6 +208,11 @@ baseline**, which is what a corpus built to exercise plumbing does and why no
 figure from it should be read as a benchmark. And the failure mode is the
 honest one: 73% omission with zero hallucinations and 100% grounding. Faced with
 vocabulary it did not know, the extractor declined rather than guessed.
+
+The model row fails the same way, one notch further along. It omits nine of
+fifteen and fabricates nothing, so both extractors are wrong in the direction a
+credit desk can live with: a missing figure an analyst chases, rather than a
+plausible one nobody checks.
 
 Fixing it means adding SORP terms to the label map, and that is a decision
 rather than a chore: adding vocabulary because an eval set revealed it is
@@ -331,10 +355,11 @@ Each one plants a specific failure mode that real documents contain, and
   its golden records rather than labelled absent. It also ships no page
   separators, so every imported document is one page and grounding figures from
   it are not comparable with paginated ones.
-- **The LLM extractor has never been run against a model.** It is built, tested
-  against a fake client, and wired into `anchor run` and `anchor sweep`, but no
-  row of the head-to-head table has been measured. Until it has, the only
-  extractor this repository has evidence about is the regex.
+- **The measured model row has no cost and no model id.** It reaches Claude
+  through the Claude Code CLI, which reports neither token usage nor which
+  model served the request. Accuracy, grounding and latency are real; the
+  cost/accuracy comparison the sweep exists to draw is not available from it.
+  The three API rows need credits and remain unmeasured.
 - **One labeller, no adjudication.** A second would surface disagreements a
   single pass cannot, and the disagreement rate would tell you something on its
   own.

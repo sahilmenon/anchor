@@ -1,0 +1,127 @@
+{
+  "run_id": "20260920T071822Z-claude-code",
+  "extractor": "claude-code",
+  "corpus_root": "corpus\\kleister-charity",
+  "created_at": "2026-09-20T07:18:22+00:00",
+  "alpha": 0.1,
+  "verified": true,
+  "skipped": [],
+  "report": {
+    "n_documents": 15,
+    "n_fields": 15,
+    "total_cost_usd": 0.0,
+    "total_latency_s": 515.1098050000146,
+    "total_input_tokens": 0,
+    "total_output_tokens": 0,
+    "overall": {
+      "n_fields": 15,
+      "n_answerable": 14,
+      "n_unanswerable": 1,
+      "n_attempted": 5,
+      "n_abstained": 10,
+      "taxonomy": {
+        "correct": 5,
+        "mismatch": 0,
+        "omission": 9,
+        "hallucination": 0,
+        "correct_abstention": 1,
+        "ungrounded": 0
+      },
+      "accuracy": 0.35714285714285715,
+      "coverage": 0.35714285714285715,
+      "grounding_rate": 1.0,
+      "hallucination_rate": 0.0,
+      "omission_rate": 0.6428571428571429,
+      "ungrounded_rate": 0.0,
+      "abstention_precision": 1.0
+    },
+    "on_ambiguous": {
+      "n_fields": 14,
+      "n_answerable": 14,
+      "n_unanswerable": 0,
+      "n_attempted": 5,
+      "n_abstained": 9,
+      "taxonomy": {
+        "correct": 5,
+        "mismatch": 0,
+        "omission": 9,
+        "hallucination": 0,
+        "correct_abstention": 0,
+        "ungrounded": 0
+      },
+      "accuracy": 0.35714285714285715,
+      "coverage": 0.35714285714285715,
+      "grounding_rate": 1.0,
+      "hallucination_rate": null,
+      "omission_rate": 0.6428571428571429,
+      "ungrounded_rate": 0.0,
+      "abstention_precision": 1.0
+    },
+    "per_field": {
+      "revenue_ltm": {
+        "n_fields": 15,
+        "n_answerable": 14,
+        "n_unanswerable": 1,
+        "n_attempted": 5,
+        "n_abstained": 10,
+        "taxonomy": {
+          "correct": 5,
+          "mismatch": 0,
+          "omission": 9,
+          "hallucination": 0,
+          "correct_abstention": 1,
+          "ungrounded": 0
+        },
+        "accuracy": 0.35714285714285715,
+        "coverage": 0.35714285714285715,
+        "grounding_rate": 1.0,
+        "hallucination_rate": 0.0,
+        "omission_rate": 0.6428571428571429,
+        "ungrounded_rate": 0.0,
+        "abstention_precision": 1.0
+      }
+    }
+  },
+  "latency_p50": 33.47627339995233,
+  "cost_per_document": 0.0,
+  "ratios": {
+    "agreement": 0.85,
+    "safety": 1.0,
+    "counts": {
+      "agree": 5,
+      "disagree": 0,
+      "both_abstained": 46,
+      "extraction_abstained": 9,
+      "golden_abstained": 0
+    }
+  },
+  "selective": {
+    "n_items": 5,
+    "n_calibration": 4,
+    "n_calibration_correct": 4,
+    "n_test": 1,
+    "alpha": 0.1,
+    "aurc": 0.0,
+    "threshold": 1.000000001,
+    "threshold_supported": false,
+    "coverage": 0.0,
+    "error_on_answered": 0.0,
+    "guarantee_held": true,
+    "baseline_error": 0.0,
+    "n_distinct_confidences": 3,
+    "aurc_is_informative": false,
+    "curve": {
+      "coverage": [
+        0.4,
+        0.6,
+        1.0
+      ],
+      "risk": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "documents": "withheld: see results/README.md"
+}
