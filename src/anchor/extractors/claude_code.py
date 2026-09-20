@@ -20,6 +20,11 @@ What it cannot tell you
 frontier row reads "n/a (subscription)" rather than a number. A sweep that puts
 this beside a priced model is comparing one measured axis against a blank.
 
+**Whether a document tried to hijack it.** The nested session runs with every
+tool stripped (see `NO_TOOLS`), so an injected instruction inside a filing can
+spoil one extraction and reach nothing else. Scoring will show that extraction
+as ungrounded or abstained, because the quote check still runs.
+
 **Which model answered.** The CLI uses whatever the local Claude Code install
 is configured with, and that is not a per-request parameter here. The run
 records `claude-code` rather than a model id, because naming a specific model
@@ -48,6 +53,21 @@ __all__ = ["ClaudeCodeExtractor", "cli_available"]
 #: The CLI wraps its answer in prose often enough that asking for bare JSON is
 #: not sufficient. This finds the outermost brace-delimited object.
 _JSON_BLOCK = re.compile(r"\{.*\}", re.DOTALL)
+
+#: Strip every tool from the nested session. This is a security control, not a
+#: tidiness one.
+#:
+#: `claude -p` is an agent with filesystem and network access, and the prompt it
+#: receives is the text of a third-party PDF. A document containing instructions
+#: aimed at a model -- which an attacker can arrange, and which OCR will happily
+#: transcribe -- would otherwise be read by something able to act on them.
+#: Removing the tools makes the nested call a text completion, so injected
+#: instructions can corrupt one extraction and nothing else.
+#:
+#: Anchor already treats document text as untrusted everywhere else: a quote is
+#: checked against the page rather than believed. This extends the same stance
+#: to the transport.
+NO_TOOLS = ("--disallowedTools", "*")
 
 
 def cli_available() -> bool:
@@ -111,7 +131,7 @@ class ClaudeCodeExtractor(ClaudeExtractor):
 
         try:
             stdout = self.runner(
-                [self.executable, "-p", prompt], None, self.timeout_s
+                [self.executable, "-p", *NO_TOOLS, prompt], None, self.timeout_s
             )
         except subprocess.TimeoutExpired:
             return _Attempt(fields={}, problems=[], error=f"timed out after {self.timeout_s:g}s")
