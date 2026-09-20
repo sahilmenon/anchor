@@ -33,6 +33,7 @@ from anchor.extractors.claude import (
     ClaudeExtractor,
     api_key_present,
 )
+from anchor.extractors.claude_code import ClaudeCodeExtractor, cli_available
 from anchor.extractors.heuristic import HeuristicExtractor
 from anchor.extractors.offline import OfflineExtractor
 from anchor.gate import GateError, check_run, load_thresholds
@@ -52,12 +53,17 @@ EXTRACTORS: dict[str, type] = {
     "heuristic": HeuristicExtractor,
     "claude": ClaudeExtractor,
     "offline": OfflineExtractor,
+    "claude-code": ClaudeCodeExtractor,
 }
 
 #: Extractors that replay recorded claims rather than producing them. A run of
 #: one carries no cost, no latency and no record of what produced it, so it can
 #: be scored but must never appear in a cost/accuracy frontier beside a model.
 REPLAY_EXTRACTORS: frozenset[str] = frozenset({"offline"})
+
+#: Extractors that report no cost. They can be scored with `anchor run`, but a
+#: frontier row for one would set a measured model against a blank cost axis.
+UNPRICED_EXTRACTORS: frozenset[str] = frozenset({"offline", "claude-code"})
 
 
 def _build_extractor(
@@ -79,6 +85,20 @@ def _build_extractor(
         raise SystemExit(
             f"unknown extractor {name!r}. Available: {', '.join(sorted(EXTRACTORS))}"
         ) from None
+
+    if cls is ClaudeCodeExtractor:
+        # Checked by resolving the name, never by running it, so a missing CLI
+        # is one sentence rather than a subprocess error per document.
+        if not cli_available():
+            raise SystemExit(
+                "the claude-code extractor needs the Claude Code CLI on PATH."
+            )
+        if model:
+            raise SystemExit(
+                "claude-code uses whatever model the local CLI is configured "
+                "with and cannot be told which; drop --model"
+            )
+        return ClaudeCodeExtractor()
 
     if cls is OfflineExtractor:
         if transcripts is None:
